@@ -1,0 +1,47 @@
+{
+  "name": "tcnativefacedetection",
+  "widgetName": "TcNativeFaceDetection",
+  "version": "1.0.0",
+  "description": "Truechange Native FaceDetection Google MLKit",
+  "copyright": "© Mendix Technology BV 2022. All rights reserved.",
+  "author": "Truechange / Sepe",
+  "engines": {
+    "node": ">=16"
+  },
+  "license": "Apache-2.0",
+  "config": {
+    "projectPath": "../testProject"
+  },
+  "packagePath": "truechange",
+  "scripts": {
+    "start": "pluggable-widgets-tools start:native",
+    "build": "pluggable-widgets-tools build:native",
+    "lint": "pluggable-widgets-tools lint",
+    "lint:fix": "pluggable-widgets-tools lint:fix",
+    "prerelease": "npm run lint",
+    "release": "pluggable-widgets-tools release:native"
+  },
+  "devDependencies": {
+    "@mendix/pluggable-widgets-tools": "^10.7.1",    
+    "@types/big.js": "^6.0.2",
+    "@types/react-native-vector-icons": "^6.4.13"
+  },
+  "dependencies": {        
+    "react-native-pressable-opacity": "^1.0.10",
+    "react-native-screens": "^3.24.0",
+    "react-native-static-safe-area-insets": "^2.2.0",
+    "react-native-vector-icons": "^10.0.0",
+    "react-native-video": "^5.2.1",
+    "react-native-worklets-core": "^1.3.3",
+    "react-native-vision-camera": "^4.3.1",
+    "react-native-vision-camera-face-detector": "^1.7.1"
+  },
+  "resolutions": {
+    "react": "18.2.0",
+    "react-native": "0.72.7"
+  },
+  "overrides": {
+    "react": "18.2.0",
+    "react-native": "0.72.7"
+  }
+}

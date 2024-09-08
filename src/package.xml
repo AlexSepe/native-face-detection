@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<package xmlns="http://www.mendix.com/package/1.0/">
+    <clientModule name="TcNativeFaceDetection" version="1.0.0" xmlns="http://www.mendix.com/clientModule/1.0/">
+        <widgetFiles>
+            <widgetFile path="TcNativeFaceDetection.xml"/>
+        </widgetFiles>
+        <files>
+            <file path="truechange/tcnativefacedetection"/>
+        </files>
+    </clientModule>
+</package>
