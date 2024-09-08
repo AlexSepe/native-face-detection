@@ -1,4 +1,4 @@
-import { Component, ReactNode } from "react";
+import { Component, ReactNode, createElement } from "react";
 import { TextStyle, ViewStyle } from "react-native";
 import { Style } from "@mendix/pluggable-widgets-tools";
 
@@ -22,6 +22,6 @@ export class TcNativeFaceDetection extends Component<TcNativeFaceDetectionProps<
 
     render(): ReactNode {
         // if (!hasPermission) return <div>No camera permission...</div>;
-        return RecognitionComponent();
+        return <RecognitionComponent></RecognitionComponent>;
     }
 }

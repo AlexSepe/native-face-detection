@@ -1,17 +1,25 @@
 import { ReactElement, createElement, useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import { Frame, Camera as VisionCamera, useCameraDevice, useCameraPermission } from "react-native-vision-camera";
-import { Bounds, Camera, Face, FaceDetectionOptions } from "react-native-vision-camera-face-detector";
+import {
+    Frame,
+    Camera as VisionCamera,
+    runAsync,
+    useCameraDevice,
+    useCameraPermission,
+    useFrameProcessor
+} from "react-native-vision-camera";
+import { Bounds, Face, FaceDetectionOptions, useFaceDetector } from "react-native-vision-camera-face-detector";
 import { CONTENT_SPACING, CONTROL_BUTTON_SIZE, SAFE_AREA_PADDING } from "./Constants";
 import { PressableOpacity } from "react-native-pressable-opacity";
 import IonIcon from "react-native-vector-icons/Ionicons";
+import { useRunOnJS } from "react-native-worklets-core";
 
 export function RecognitionComponent(): ReactElement {
     const { width, height } = useWindowDimensions();
     const { hasPermission, requestPermission } = useCameraPermission();
     // const [cameraMounted, setCameraMounted] = useState<boolean>(false)
     // const [cameraPaused, setCameraPaused] = useState<boolean>(false)
-    const [autoScale] = useState<boolean>(true);
+    // const [autoScale] = useState<boolean>(true);
     const [facingFront, setFacingFront] = useState<boolean>(true);
     const [torch, setTorch] = useState(false);
     const faceDetectionOptions = useRef<FaceDetectionOptions>({
@@ -21,7 +29,8 @@ export function RecognitionComponent(): ReactElement {
         landmarkMode: "all",
         trackingEnabled: false,
         windowWidth: width,
-        windowHeight: height
+        windowHeight: height,
+        autoScale: true
     }).current;
     const isCameraActive = true;
     const cameraDevice = useCameraDevice(facingFront ? "front" : "back");
@@ -41,6 +50,8 @@ export function RecognitionComponent(): ReactElement {
             return;
         }
         requestPermission();
+        setScanFaceText([]);
+        setScanFaceBounds([]);
     }, []);
 
     /**
@@ -68,12 +79,17 @@ export function RecognitionComponent(): ReactElement {
      * @param {Face[]} faces Detection result
      * @returns {void}
      */
+
     function handleFacesDetected(faces: Face[], frame: Frame): void {
-        console.log("faces", faces.length, "frame", frame.toString());
+        if (!frame || !faces) {
+            console.log("faces || frame is Empty");
+            return;
+        }
         // if no faces are detected we do nothing
         if (Object.keys(faces).length <= 0) {
             return;
         }
+        console.log("faces", faces.length, "frameTs", frame.timestamp);
 
         // const contours = JSON.stringify(faces[0]?.contours);
         // const landmarks = JSON.stringify(faces[0]?.landmarks);
@@ -93,27 +109,48 @@ export function RecognitionComponent(): ReactElement {
         setScanFaceBounds(faceBounds);
 
         // only call camera methods if ref is defined
-        if (camera.current) {
+        if (camera.current) {            
             // take photo, capture video, etc...
         }
     }
 
+    /* CUSTOM cameraFrameProcessor */
+    const { detectFaces } = useFaceDetector(faceDetectionOptions);
+
+    const runOnJs = useRunOnJS(handleFacesDetected, [handleFacesDetected]);
+
+    const cameraFrameProcessor = useFrameProcessor(
+        frame => {
+            "worklet";
+            console.info("New Frame arrived!");
+            runAsync(frame, () => {
+                "worklet";
+                console.info(`New Frame arrived! Async run...W:${frame?.width} H:${frame?.width}`);
+                const faces = detectFaces(frame);
+                console.log(faces);
+                // runOnJs(faces, frame);
+            });
+        },
+        [runOnJs]
+    );
+
     return (
         <View style={styles.container}>
             {cameraDevice != null && (
-                <Camera
+                <VisionCamera
                     ref={camera}
                     style={StyleSheet.absoluteFill}
                     isActive={isCameraActive}
                     torch={torch ? "on" : "off"}
                     device={cameraDevice}
+                    frameProcessor={cameraFrameProcessor}
                     onError={handleCameraMountError}
-                    faceDetectionCallback={handleFacesDetected}
+                    // faceDetectionCallback={handleFacesDetected}
                     onUIRotationChanged={handleUiRotation}
-                    faceDetectionOptions={{
-                        ...faceDetectionOptions,
-                        autoScale
-                    }}
+                    // faceDetectionOptions={{
+                    //     ...faceDetectionOptions,
+                    //     autoScale
+                    // }}
                 />
             )}
 
