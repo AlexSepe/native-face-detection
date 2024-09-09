@@ -14,14 +14,24 @@ export class TcNativeFaceDetection extends Component<TcNativeFaceDetectionProps<
     constructor(props: TcNativeFaceDetectionProps<CustomStyle>) {
         super(props);
         this.setFacesHandler = this.setFacesHandler.bind(this);
+        this.setPhotoHandler = this.setPhotoHandler.bind(this);
     }
 
     private setFacesHandler(faces: any): void {
         this.props.faces?.setValue(faces);
     }
 
+    private setPhotoHandler(photoPath: string): void {
+        if (this.props.photoPath) {
+            this.props.photoPath?.setValue(photoPath);
+        }
+        if (this.props.onNewPhoto && this.props.onNewPhoto.canExecute){
+            this.props.onNewPhoto.execute();
+        }
+    }
+
     render(): ReactNode {
         // if (!hasPermission) return <div>No camera permission...</div>;
-        return <RecognitionComponent></RecognitionComponent>;
+        return <RecognitionComponent usarFrameProcessor={this.props.frameProcessor.value || false} onNewPhoto={this.setPhotoHandler}/>;
     }
 }

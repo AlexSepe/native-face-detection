@@ -13,7 +13,27 @@
                 <description>Retorna os dados capturados pelo MLKit Faces</description>
                 <attributeTypes>
                     <attributeType name="String" />
+                </attributeTypes>               
+            </property>
+
+            <property key="frameProcessor" type="attribute" required="true">
+                <caption>FrameProcessor</caption>
+                <description>Utilizar MLKit Faces</description>
+                <attributeTypes>
+                    <attributeType name="Boolean" />
                 </attributeTypes>
+            </property>
+            
+            <property key="photoPath" type="attribute" required="false">
+                <caption>photoPath</caption>
+                <description>Retorna os dados da photo</description>
+                <attributeTypes>
+                    <attributeType name="String" />
+                </attributeTypes>               
+            </property>
+            <property key="onNewPhoto" type="action" required="false">
+                <caption>onNewPhoto</caption>
+                <description></description>
             </property>
         </propertyGroup>
     </properties>

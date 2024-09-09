@@ -4,12 +4,15 @@
  * @author Mendix Widgets Framework Team
  */
 import { CSSProperties } from "react";
-import { EditableValue } from "mendix";
+import { ActionValue, EditableValue } from "mendix";
 
 export interface TcNativeFaceDetectionProps<Style> {
     name: string;
     style: Style[];
     faces?: EditableValue<string>;
+    frameProcessor: EditableValue<boolean>;
+    photoPath?: EditableValue<string>;
+    onNewPhoto?: ActionValue;
 }
 
 export interface TcNativeFaceDetectionPreviewProps {
@@ -23,4 +26,7 @@ export interface TcNativeFaceDetectionPreviewProps {
     readOnly: boolean;
     renderMode?: "design" | "xray" | "structure";
     faces: string;
+    frameProcessor: string;
+    photoPath: string;
+    onNewPhoto: {} | null;
 }

@@ -14,7 +14,12 @@ import { PressableOpacity } from "react-native-pressable-opacity";
 import IonIcon from "react-native-vector-icons/Ionicons";
 import { useRunOnJS } from "react-native-worklets-core";
 
-export function RecognitionComponent(): ReactElement {
+export interface RecognitionComponentProps {
+    usarFrameProcessor: boolean;
+    onNewPhoto?: (photoPath: string) => void;
+}
+
+export function RecognitionComponent(props: RecognitionComponentProps): ReactElement {
     const { width, height } = useWindowDimensions();
     const { hasPermission, requestPermission } = useCameraPermission();
     // const [cameraMounted, setCameraMounted] = useState<boolean>(false)
@@ -109,7 +114,7 @@ export function RecognitionComponent(): ReactElement {
         setScanFaceBounds(faceBounds);
 
         // only call camera methods if ref is defined
-        if (camera.current) {            
+        if (camera.current) {
             // take photo, capture video, etc...
         }
     }
@@ -125,7 +130,7 @@ export function RecognitionComponent(): ReactElement {
             console.info("New Frame arrived!");
             runAsync(frame, () => {
                 "worklet";
-                console.info(`New Frame arrived! Async run...W:${frame?.width} H:${frame?.width}`);
+                console.info(`New Frame arrived! Async run...W:${frame?.width} H:${frame?.height}`);
                 const faces = detectFaces(frame);
                 console.log(faces);
                 // runOnJs(faces, frame);
@@ -133,6 +138,20 @@ export function RecognitionComponent(): ReactElement {
         },
         [runOnJs]
     );
+
+    async function handleCapturePhoto(): Promise<void> {
+        if (camera.current) {
+            // take photo, capture video, etc...
+            const photo = await camera.current.takePhoto({
+                enableShutterSound: true,
+                enableAutoDistortionCorrection: true
+            });
+            // photo.path
+            if (props.onNewPhoto) {
+                props.onNewPhoto(photo.path);
+            }
+        }
+    }
 
     return (
         <View style={styles.container}>
@@ -143,7 +162,7 @@ export function RecognitionComponent(): ReactElement {
                     isActive={isCameraActive}
                     torch={torch ? "on" : "off"}
                     device={cameraDevice}
-                    frameProcessor={cameraFrameProcessor}
+                    frameProcessor={props.usarFrameProcessor ? cameraFrameProcessor : undefined}
                     onError={handleCameraMountError}
                     // faceDetectionCallback={handleFacesDetected}
                     onUIRotationChanged={handleUiRotation}
@@ -198,6 +217,10 @@ export function RecognitionComponent(): ReactElement {
                 </PressableOpacity>
             </View>
 
+            <PressableOpacity style={styles.captureButton} onPress={handleCapturePhoto}>
+                <IonIcon name="capture" color="white" size={60} />
+            </PressableOpacity>
+
             {/* Back Button */}
             {/* <PressableOpacity style={styles.backButton} onPress={navigation.goBack}>
         <IonIcon name="chevron-back" color="white" size={35} />
@@ -243,6 +266,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "black"
+    },
+    captureButton: {
+        position: "absolute",
+        alignSelf: "center",
+        bottom: SAFE_AREA_PADDING.paddingBottom
     },
     button: {
         marginBottom: CONTENT_SPACING,
