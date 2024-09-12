@@ -1,72 +1,68 @@
 import { ReactElement, createElement, useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { StyleSheet, View } from "react-native";
 import {
-    Frame,
     Camera as VisionCamera,
-    runAsync,
     useCameraDevice,
-    useCameraPermission,
-    useFrameProcessor
+    useCameraFormat,
+    useCameraPermission
 } from "react-native-vision-camera";
-import { Bounds, Face, FaceDetectionOptions, useFaceDetector } from "react-native-vision-camera-face-detector";
 import { CONTENT_SPACING, CONTROL_BUTTON_SIZE, SAFE_AREA_PADDING } from "./Constants";
-import { PressableOpacity } from "react-native-pressable-opacity";
-import IonIcon from "react-native-vector-icons/Ionicons";
-import { useRunOnJS } from "react-native-worklets-core";
+// import { PressableOpacity } from "react-native-pressable-opacity";
+// import IonIcon from "react-native-vector-icons/Ionicons";
+import FaceDetection, {
+    FaceDetectorContourMode,
+    FaceDetectorLandmarkMode,
+    FaceDetectorOptionsType,
+    FaceDetectorClassificationMode,
+    FaceDetectorPerformanceMode
+} from "react-native-face-detection-tc";
 
 export interface RecognitionComponentProps {
-    usarFrameProcessor: boolean;
-    onNewPhoto?: (photoPath: string) => void;
+    facingFront?: boolean;
+    executeDetectionId?: string;
+    onNewPhoto?: (photoPath: string, facesJson: string, latestDetectionId?: string) => void;
 }
 
 export function RecognitionComponent(props: RecognitionComponentProps): ReactElement {
-    const { width, height } = useWindowDimensions();
     const { hasPermission, requestPermission } = useCameraPermission();
-    // const [cameraMounted, setCameraMounted] = useState<boolean>(false)
-    // const [cameraPaused, setCameraPaused] = useState<boolean>(false)
-    // const [autoScale] = useState<boolean>(true);
-    const [facingFront, setFacingFront] = useState<boolean>(true);
-    const [torch, setTorch] = useState(false);
-    const faceDetectionOptions = useRef<FaceDetectionOptions>({
-        performanceMode: "fast",
-        classificationMode: "all",
-        contourMode: "all",
-        landmarkMode: "all",
-        trackingEnabled: false,
-        windowWidth: width,
-        windowHeight: height,
-        autoScale: true
-    }).current;
     const isCameraActive = true;
+    const [facingFront, setFacingFront] = useState<boolean>(true);
     const cameraDevice = useCameraDevice(facingFront ? "front" : "back");
+
+    const format = useCameraFormat(cameraDevice, [{ photoResolution: { width: 640, height: 480 }, photoHdr: false }]);
     //
     // vision camera ref
     //
     const camera = useRef<VisionCamera>(null);
-    //
-    // face rectangle position
-    //
-    const [scanFaceText, setScanFaceText] = useState<string[]>([]);
-    const [scanFaceBounds, setScanFaceBounds] = useState<Bounds[]>([]);
-    const [aRotation, setRotation] = useState<number>(0);
 
     useEffect(() => {
         if (hasPermission) {
             return;
         }
         requestPermission();
-        setScanFaceText([]);
-        setScanFaceBounds([]);
     }, []);
+
+    // Monitora o detection Id, quando enviado um Novo, realiza uma foto e detect faces.
+    useEffect(() => {
+        if (!props.executeDetectionId || props.executeDetectionId === "") {
+            return;
+        }
+        handleCapturePhoto(props.executeDetectionId);
+    }, [props.executeDetectionId]);
+
+    useEffect(() => {
+        // console.warn(`camera flip - front:${props.facingFront}`);
+        setFacingFront(props.facingFront !== undefined ? props.facingFront : true);
+    }, [props.facingFront]);
 
     /**
      * Handle camera UI rotation
      *
      * @param {number} rotation Camera rotation
      */
-    function handleUiRotation(rotation: number) {
+    function handleUiRotation(_rotation: number) {
         // aRot.value = rotation
-        setRotation(rotation);
+        // setRotation(rotation);
     }
 
     /**
@@ -78,91 +74,50 @@ export function RecognitionComponent(props: RecognitionComponentProps): ReactEle
         console.error("camera mount error", error);
     }
 
-    /**
-     * Handle detection result
-     *
-     * @param {Face[]} faces Detection result
-     * @returns {void}
-     */
-
-    function handleFacesDetected(faces: Face[], frame: Frame): void {
-        if (!frame || !faces) {
-            console.log("faces || frame is Empty");
-            return;
-        }
-        // if no faces are detected we do nothing
-        if (Object.keys(faces).length <= 0) {
-            return;
-        }
-        console.log("faces", faces.length, "frameTs", frame.timestamp);
-
-        // const contours = JSON.stringify(faces[0]?.contours);
-        // const landmarks = JSON.stringify(faces[0]?.landmarks);
-        const facesText: string[] = [];
-        const faceBounds: Bounds[] = [];
-        faces.forEach((face, index) => {
-            const smilling = (face.smilingProbability * 100).toFixed(2);
-            const leftEyeOpen = (face.leftEyeOpenProbability * 100).toFixed(2);
-            const rightEyeOpen = (face.rightEyeOpenProbability * 100).toFixed(2);
-            const text = `F:${index} Smiling:${smilling}% Eye L:${leftEyeOpen}% R:${rightEyeOpen}% X:${face.bounds.x.toFixed(
-                0
-            )} Y:${face.bounds.y.toFixed(0)}`;
-            facesText.push(text);
-            faceBounds.push(face.bounds);
-        });
-        setScanFaceText(facesText);
-        setScanFaceBounds(faceBounds);
-
-        // only call camera methods if ref is defined
-        if (camera.current) {
-            // take photo, capture video, etc...
-        }
-    }
-
-    /* CUSTOM cameraFrameProcessor */
-    const { detectFaces } = useFaceDetector(faceDetectionOptions);
-
-    const runOnJs = useRunOnJS(handleFacesDetected, [handleFacesDetected]);
-
-    const cameraFrameProcessor = useFrameProcessor(
-        frame => {
-            "worklet";
-            console.info("New Frame arrived!");
-            runAsync(frame, () => {
-                "worklet";
-                console.info(`New Frame arrived! Async run...W:${frame?.width} H:${frame?.height}`);
-                const faces = detectFaces(frame);
-                console.log(faces);
-                // runOnJs(faces, frame);
-            });
-        },
-        [runOnJs]
-    );
-
-    async function handleCapturePhoto(): Promise<void> {
+    async function handleCapturePhoto(latestDetectionId: string | undefined): Promise<void> {
         if (camera.current) {
             // take photo, capture video, etc...
             const photo = await camera.current.takePhoto({
-                enableShutterSound: true,
-                enableAutoDistortionCorrection: true
+                enableShutterSound: false,
+                enableAutoDistortionCorrection: false
             });
-            // photo.path
-            if (props.onNewPhoto) {
-                props.onNewPhoto(photo.path);
-            }
+            // const result = await fetch(`file://${photo.path}`)
+            // const data = await result.blob();
+
+            processFaces(photo.path).then(faces => {
+                // drawFaces(faces, photo);
+                // photo.path
+                if (props.onNewPhoto) {
+                    props.onNewPhoto(`file://${photo.path}`, JSON.stringify(faces), latestDetectionId);
+                }
+            });
         }
+    }
+
+    async function processFaces(imagePath: string) {
+        const options: FaceDetectorOptionsType = {
+            landmarkMode: FaceDetectorLandmarkMode.ALL,
+            contourMode: FaceDetectorContourMode.ALL,
+            classificationMode: FaceDetectorClassificationMode.ALL,
+            performanceMode: FaceDetectorPerformanceMode.FAST
+        };
+
+        return FaceDetection.processImage(imagePath, options);
     }
 
     return (
         <View style={styles.container}>
-            {cameraDevice != null && (
+            {hasPermission && cameraDevice != null && (
                 <VisionCamera
                     ref={camera}
                     style={StyleSheet.absoluteFill}
                     isActive={isCameraActive}
-                    torch={torch ? "on" : "off"}
+                    // torch={torch ? "on" : "off"}
                     device={cameraDevice}
-                    frameProcessor={props.usarFrameProcessor ? cameraFrameProcessor : undefined}
+                    photo
+                    photoQualityBalance="speed"
+                    format={format}
+                    // frameProcessor={props.usarFrameProcessor ? cameraFrameProcessor : undefined}
                     onError={handleCameraMountError}
                     // faceDetectionCallback={handleFacesDetected}
                     onUIRotationChanged={handleUiRotation}
@@ -173,38 +128,7 @@ export function RecognitionComponent(props: RecognitionComponentProps): ReactEle
                 />
             )}
 
-            {scanFaceBounds.map((faceBound, index) => (
-                <View
-                    key={`facebox-${index}`}
-                    style={{
-                        position: "absolute",
-                        borderWidth: 4,
-                        borderLeftColor: "rgb(0,255,0)",
-                        borderRightColor: "rgb(0,255,0)",
-                        borderBottomColor: "rgb(0,255,0)",
-                        borderTopColor: "rgb(255,0,0)",
-                        width: faceBound.width || 0,
-                        height: faceBound.height || 0,
-                        left: faceBound.x || 0,
-                        top: faceBound.y || 0,
-                        transform: [{ rotate: `${aRotation}deg` }]
-                    }}
-                >
-                    <Text
-                        style={{
-                            width: "100%",
-                            backgroundColor: "rgb(255,255,0,0.2)",
-                            textAlign: "left"
-                        }}
-                    >
-                        {index}
-                    </Text>
-                </View>
-            ))}
-
-            {/* <StatusBarBlurBackground /> */}
-
-            <View style={styles.rightButtonRow}>
+            {/* <View style={styles.rightButtonRow}>
                 <PressableOpacity
                     style={styles.button}
                     onPress={() => setFacingFront(current => !current)}
@@ -215,49 +139,11 @@ export function RecognitionComponent(props: RecognitionComponentProps): ReactEle
                 <PressableOpacity style={styles.button} onPress={() => setTorch(!torch)} disabledOpacity={0.4}>
                     <IonIcon name={torch ? "flash" : "flash-off"} color="white" size={24} />
                 </PressableOpacity>
-            </View>
+            </View> */}
 
-            <PressableOpacity style={styles.captureButton} onPress={handleCapturePhoto}>
-                <IonIcon name="capture" color="white" size={60} />
-            </PressableOpacity>
-
-            {/* Back Button */}
-            {/* <PressableOpacity style={styles.backButton} onPress={navigation.goBack}>
-        <IonIcon name="chevron-back" color="white" size={35} />
-      </PressableOpacity> */}
-
-            <View
-                style={{
-                    position: "absolute",
-                    bottom: 20,
-                    left: 0,
-                    right: 0,
-                    display: "flex",
-                    flexDirection: "column"
-                }}
-            >
-                {scanFaceText.map((text, index) => (
-                    <View
-                        key={`faceinfotext-${index}`}
-                        style={{
-                            width: "100%",
-                            display: "flex",
-                            flexDirection: "row",
-                            justifyContent: "center"
-                        }}
-                    >
-                        <Text
-                            style={{
-                                width: "100%",
-                                backgroundColor: "rgb(255,255,0)",
-                                textAlign: "left"
-                            }}
-                        >
-                            {text}
-                        </Text>
-                    </View>
-                ))}
-            </View>
+            {/* <PressableOpacity style={styles.captureButton} onPress={handleCapturePhoto}>
+                <IonIcon name="scan-circle-outline" color="white" size={60} />
+            </PressableOpacity> */}
         </View>
     );
 }

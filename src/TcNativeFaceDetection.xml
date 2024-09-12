@@ -15,15 +15,30 @@
                     <attributeType name="String" />
                 </attributeTypes>               
             </property>
-
-            <property key="frameProcessor" type="attribute" required="true">
-                <caption>FrameProcessor</caption>
-                <description>Utilizar MLKit Faces</description>
+            <property key="facingFront" type="attribute" required="true">
+                <caption>facingFront</caption>
+                <description>Utilizar camera frontal / traseira</description>
                 <attributeTypes>
                     <attributeType name="Boolean" />
                 </attributeTypes>
             </property>
+
+            <property key="executeDetection" type="attribute" required="true">
+                <caption>executeDetection</caption>
+                <description>Indica que deve processar um frame, setar novo Id para nova photo!</description>
+                <attributeTypes>
+                    <attributeType name="String" />
+                </attributeTypes>
+            </property>
             
+            <property key="latestDetection" type="attribute" required="true">
+                <caption>latestDetection</caption>
+                <description>Retorna o ultimo Id processado!</description>
+                <attributeTypes>
+                    <attributeType name="String" />
+                </attributeTypes>
+            </property>
+
             <property key="photoPath" type="attribute" required="false">
                 <caption>photoPath</caption>
                 <description>Retorna os dados da photo</description>

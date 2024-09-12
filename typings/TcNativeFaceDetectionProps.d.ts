@@ -10,7 +10,9 @@ export interface TcNativeFaceDetectionProps<Style> {
     name: string;
     style: Style[];
     faces?: EditableValue<string>;
-    frameProcessor: EditableValue<boolean>;
+    facingFront: EditableValue<boolean>;
+    executeDetection: EditableValue<string>;
+    latestDetection: EditableValue<string>;
     photoPath?: EditableValue<string>;
     onNewPhoto?: ActionValue;
 }
@@ -26,7 +28,9 @@ export interface TcNativeFaceDetectionPreviewProps {
     readOnly: boolean;
     renderMode?: "design" | "xray" | "structure";
     faces: string;
-    frameProcessor: string;
+    facingFront: string;
+    executeDetection: string;
+    latestDetection: string;
     photoPath: string;
     onNewPhoto: {} | null;
 }
