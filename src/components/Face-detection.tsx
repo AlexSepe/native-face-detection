@@ -16,6 +16,7 @@ import FaceDetection, {
     FaceDetectorClassificationMode,
     FaceDetectorPerformanceMode
 } from "react-native-face-detection-tc";
+import { useCameraLayout } from "../hooks/use-camera-layout";
 
 export interface RecognitionComponentProps {
     facingFront?: boolean;
@@ -27,6 +28,16 @@ export function RecognitionComponent(props: RecognitionComponentProps): ReactEle
     const { hasPermission, requestPermission } = useCameraPermission();
     const isCameraActive = true;
     const [facingFront, setFacingFront] = useState<boolean>(true);
+    const {
+        setContainer,
+        CAMERA_SIZE,
+        CAMERA_HORZIONTAL_PADDING,
+        CAMERA_BORDER_RADIUS,
+        X_DEFORMATION_RATIO,
+        X_RESTORATION_RATIO,
+        CAMERA_VERTICAL_PADDING
+    } = useCameraLayout();
+
     const cameraDevice = useCameraDevice(facingFront ? "front" : "back");
 
     const format = useCameraFormat(cameraDevice, [{ photoResolution: { width: 640, height: 480 }, photoHdr: false }]);
@@ -75,7 +86,11 @@ export function RecognitionComponent(props: RecognitionComponentProps): ReactEle
     }
 
     async function handleCapturePhoto(latestDetectionId: string | undefined): Promise<void> {
+        console.info("[handleCapturePhoto]", "start");
+
         if (camera.current) {
+            console.info("[handleCapturePhoto]", "has camera");
+
             // take photo, capture video, etc...
             const photo = await camera.current.takePhoto({
                 enableShutterSound: false,
@@ -84,7 +99,11 @@ export function RecognitionComponent(props: RecognitionComponentProps): ReactEle
             // const result = await fetch(`file://${photo.path}`)
             // const data = await result.blob();
 
+            console.info("[handleCapturePhoto]", "photo", photo);
+
             processFaces(photo.path).then(faces => {
+                console.info("[handleCapturePhoto]", "faces", faces);
+
                 // drawFaces(faces, photo);
                 // photo.path
                 if (props.onNewPhoto) {
@@ -92,6 +111,8 @@ export function RecognitionComponent(props: RecognitionComponentProps): ReactEle
                 }
             });
         }
+
+        console.info("[handleCapturePhoto]", "end");
     }
 
     async function processFaces(imagePath: string) {
@@ -106,26 +127,43 @@ export function RecognitionComponent(props: RecognitionComponentProps): ReactEle
     }
 
     return (
-        <View style={styles.container}>
+        <View style={styles.container} onLayout={evt => setContainer(evt.nativeEvent.layout)}>
             {hasPermission && cameraDevice != null && (
-                <VisionCamera
-                    ref={camera}
-                    style={StyleSheet.absoluteFill}
-                    isActive={isCameraActive}
-                    // torch={torch ? "on" : "off"}
-                    device={cameraDevice}
-                    photo
-                    photoQualityBalance="speed"
-                    format={format}
-                    // frameProcessor={props.usarFrameProcessor ? cameraFrameProcessor : undefined}
-                    onError={handleCameraMountError}
-                    // faceDetectionCallback={handleFacesDetected}
-                    onUIRotationChanged={handleUiRotation}
-                    // faceDetectionOptions={{
-                    //     ...faceDetectionOptions,
-                    //     autoScale
-                    // }}
-                />
+                <View
+                    style={{
+                        position: "absolute",
+                        top: CAMERA_VERTICAL_PADDING,
+                        left: CAMERA_HORZIONTAL_PADDING,
+                        right: CAMERA_HORZIONTAL_PADDING,
+                        borderRadius: CAMERA_BORDER_RADIUS,
+                        overflow: "hidden",
+                        transform: [{ scaleX: X_DEFORMATION_RATIO }]
+                    }}
+                >
+                    <VisionCamera
+                        ref={camera}
+                        style={{
+                            width: CAMERA_SIZE,
+                            height: CAMERA_SIZE,
+                            transform: [{ scaleX: X_RESTORATION_RATIO }]
+                        }}
+                        isActive={isCameraActive}
+                        // torch={torch ? "on" : "off"}
+                        device={cameraDevice}
+                        photo
+                        photoQualityBalance="speed"
+                        format={format}
+                        // frameProcessor={props.usarFrameProcessor ? cameraFrameProcessor : undefined}
+                        onError={handleCameraMountError}
+                        // faceDetectionCallback={handleFacesDetected}
+
+                        onUIRotationChanged={handleUiRotation}
+                        // faceDetectionOptions={{
+                        //     ...faceDetectionOptions,
+                        //     autoScale
+                        // }}
+                    />
+                </View>
             )}
 
             {/* <View style={styles.rightButtonRow}>
@@ -141,9 +179,14 @@ export function RecognitionComponent(props: RecognitionComponentProps): ReactEle
                 </PressableOpacity>
             </View> */}
 
-            {/* <PressableOpacity style={styles.captureButton} onPress={handleCapturePhoto}>
-                <IonIcon name="scan-circle-outline" color="white" size={60} />
-            </PressableOpacity> */}
+            {/*
+                <PressableOpacity
+                    style={styles.captureButton}
+                    onPress={evt => handleCapturePhoto(evt.nativeEvent.timestamp.toString())}
+                >
+                    <IonIcon name="scan-circle-outline" color="white" size={60} />
+                </PressableOpacity>
+            */ }
         </View>
     );
 }
@@ -151,7 +194,7 @@ export function RecognitionComponent(props: RecognitionComponentProps): ReactEle
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "black"
+        backgroundColor: "white"
     },
     captureButton: {
         position: "absolute",

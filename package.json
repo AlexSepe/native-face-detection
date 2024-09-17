@@ -10,7 +10,7 @@
   },
   "license": "Apache-2.0",
   "config": {
-    "projectPath": "../testProject"
+    "projectPath": "D:\\Desktop\\Truechange\\LocacaoCore-main"
   },
   "packagePath": "truechange",
   "scripts": {
@@ -27,7 +27,7 @@
     "@types/react-native-vector-icons": "^6.4.13",
     "react-native-vision-camera": "4.3.1"
   },
-  "dependencies": {    
+  "dependencies": {
     "react-native-pressable-opacity": "^1.0.10",
     "react-native-screens": "^3.24.0",
     "react-native-static-safe-area-insets": "^2.2.0",

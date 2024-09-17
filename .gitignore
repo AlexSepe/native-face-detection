@@ -18,5 +18,5 @@ mendixProject
 **/screenshot-results
 **/tests/testProject
 **/artifacts
-/yarn.lock
 /package-lock.json
+/yarn.lock
