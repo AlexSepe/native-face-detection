@@ -40,7 +40,7 @@ export function RecognitionComponent(props: RecognitionComponentProps): ReactEle
 
     const cameraDevice = useCameraDevice(facingFront ? "front" : "back");
 
-    const format = useCameraFormat(cameraDevice, [{ photoResolution: { width: 640, height: 480 }, photoHdr: false }]);
+    const format = useCameraFormat(cameraDevice, [{ photoResolution: { width: 1280, height: 720 }, photoHdr: false }]);
     //
     // vision camera ref
     //
@@ -101,25 +101,33 @@ export function RecognitionComponent(props: RecognitionComponentProps): ReactEle
 
             console.info("[handleCapturePhoto]", "photo", photo);
 
-            processFaces(photo.path).then(faces => {
-                console.info("[handleCapturePhoto]", "faces", faces);
-
-                // drawFaces(faces, photo);
-                // photo.path
-                if (props.onNewPhoto) {
-                    props.onNewPhoto(`file://${photo.path}`, JSON.stringify(faces), latestDetectionId);
-                }
-            });
+            processFaces(photo.path)
+                .then(
+                    faces => {
+                        console.info("[handleCapturePhoto]", "faces", faces);
+                        // drawFaces(faces, photo);
+                        // photo.path
+                        if (props.onNewPhoto) {
+                            const photoPath = (photo.path.startsWith("file://") ? "" : "file://") + photo.path;
+                            props.onNewPhoto(photoPath, JSON.stringify(faces), latestDetectionId);
+                        }
+                    },
+                    rejected => {
+                        console.info("[handleCapturePhoto]", "processFaces.rejected", rejected);
+                    }
+                )
+                .catch(error => {
+                    console.info("[handleCapturePhoto]", "processFaces.error", error);
+                });
         }
-
         console.info("[handleCapturePhoto]", "end");
     }
 
     async function processFaces(imagePath: string) {
         const options: FaceDetectorOptionsType = {
-            landmarkMode: FaceDetectorLandmarkMode.ALL,
-            contourMode: FaceDetectorContourMode.ALL,
-            classificationMode: FaceDetectorClassificationMode.ALL,
+            landmarkMode: FaceDetectorLandmarkMode.ALL,//Para tentar detectar os "pontos de referência" faciais, como olhos, orelhas, nariz, bochechas, boca — de todos os rostos detectados.
+            contourMode: FaceDetectorContourMode.ALL,//Para detectar os contornos das características faciais. Contornos são detectado apenas no rosto mais proeminente da imagem.
+            classificationMode: FaceDetectorClassificationMode.ALL,//Se é necessário classificar rostos em categorias como "sorrindo" e "de olhos abertos".
             performanceMode: FaceDetectorPerformanceMode.FAST
         };
 
@@ -186,7 +194,7 @@ export function RecognitionComponent(props: RecognitionComponentProps): ReactEle
                 >
                     <IonIcon name="scan-circle-outline" color="white" size={60} />
                 </PressableOpacity>
-            */ }
+            */}
         </View>
     );
 }

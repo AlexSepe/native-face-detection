@@ -2,7 +2,7 @@
     "extends": "@mendix/pluggable-widgets-tools/configs/tsconfig.base",
     "compilerOptions": {
         "jsx": "react",
-        "baseUrl": "./"
+        "baseUrl": "./",
     },
-    "include": ["./src", "./src/components", "./typings", "react-native.config.js"]
+    "include": ["./src", "./src/components", "./src/hooks", "./typings", "react-native.config.js"]
 }
