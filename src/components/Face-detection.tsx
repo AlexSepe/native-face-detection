@@ -125,9 +125,9 @@ export function RecognitionComponent(props: RecognitionComponentProps): ReactEle
 
     async function processFaces(imagePath: string) {
         const options: FaceDetectorOptionsType = {
-            landmarkMode: FaceDetectorLandmarkMode.ALL,//Para tentar detectar os "pontos de referência" faciais, como olhos, orelhas, nariz, bochechas, boca — de todos os rostos detectados.
-            contourMode: FaceDetectorContourMode.ALL,//Para detectar os contornos das características faciais. Contornos são detectado apenas no rosto mais proeminente da imagem.
-            classificationMode: FaceDetectorClassificationMode.ALL,//Se é necessário classificar rostos em categorias como "sorrindo" e "de olhos abertos".
+            landmarkMode: FaceDetectorLandmarkMode.ALL, // Para tentar detectar os "pontos de referência" faciais, como olhos, orelhas, nariz, bochechas, boca — de todos os rostos detectados.
+            contourMode: FaceDetectorContourMode.ALL, // Para detectar os contornos das características faciais. Contornos são detectado apenas no rosto mais proeminente da imagem.
+            classificationMode: FaceDetectorClassificationMode.ALL, // Se é necessário classificar rostos em categorias como "sorrindo" e "de olhos abertos".
             performanceMode: FaceDetectorPerformanceMode.FAST
         };
 
