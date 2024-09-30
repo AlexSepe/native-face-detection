@@ -40,7 +40,9 @@ export function RecognitionComponent(props: RecognitionComponentProps): ReactEle
 
     const cameraDevice = useCameraDevice(facingFront ? "front" : "back");
 
-    const format = useCameraFormat(cameraDevice, [{ photoResolution: { width: 1280, height: 720 }, photoHdr: false }]);
+    const format = useCameraFormat(cameraDevice, [
+        { photoAspectRatio: 9 / 16, photoResolution: { width: 1280, height: 720 }, photoHdr: false }
+    ]);
     //
     // vision camera ref
     //
@@ -86,7 +88,7 @@ export function RecognitionComponent(props: RecognitionComponentProps): ReactEle
     }
 
     async function handleCapturePhoto(latestDetectionId: string | undefined): Promise<void> {
-        console.info("[handleCapturePhoto]", "start");
+        console.info("[handleCapturePhoto] ***** ", "start");
 
         if (camera.current) {
             console.info("[handleCapturePhoto]", "has camera");
@@ -128,7 +130,8 @@ export function RecognitionComponent(props: RecognitionComponentProps): ReactEle
             landmarkMode: FaceDetectorLandmarkMode.ALL, // Para tentar detectar os "pontos de referência" faciais, como olhos, orelhas, nariz, bochechas, boca — de todos os rostos detectados.
             contourMode: FaceDetectorContourMode.ALL, // Para detectar os contornos das características faciais. Contornos são detectado apenas no rosto mais proeminente da imagem.
             classificationMode: FaceDetectorClassificationMode.ALL, // Se é necessário classificar rostos em categorias como "sorrindo" e "de olhos abertos".
-            performanceMode: FaceDetectorPerformanceMode.FAST
+            performanceMode: FaceDetectorPerformanceMode.ACCURATE,
+            minFaceSize: 0.1
         };
 
         return FaceDetection.processImage(imagePath, options);

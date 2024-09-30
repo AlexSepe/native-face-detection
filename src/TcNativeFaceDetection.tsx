@@ -43,7 +43,8 @@ export class TcNativeFaceDetection extends Component<TcNativeFaceDetectionProps<
             <RecognitionComponent
                 facingFront={this.props.facingFront.value}
                 executeDetectionId={this.props.executeDetection.value}
-                onNewPhoto={this.setPhotoHandler}
+                onNewPhoto={this.setPhotoHandler}                
+
             />
         );
     }
